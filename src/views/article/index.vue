@@ -121,6 +121,7 @@ export default {
       let data = {
         pageSize: this.pageSize,
         currentPage: (this.currentPage - 1) * this.pageSize,
+        client: "admin",
       };
       this.listLoading = true;
       getList(data).then((response) => {

@@ -47,3 +47,11 @@ export function details(params) {
     params
   })
 }
+// 文章状态
+export function articleStatus(params) {
+  return request({
+    url: '/articleStatus',
+    method: 'post',
+    params
+  })
+}

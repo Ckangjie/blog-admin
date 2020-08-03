@@ -48,7 +48,7 @@ export const constantRoutes = [
         path: '/comment',
         name: 'comment',
         component: () => import('@/views/article/comment'),
-        meta: { title: '留言管理', icon: 'table' }
+        meta: { title: '评论管理', icon: 'table' }
       },
       {
         path: '/details/:id',

@@ -20,16 +20,16 @@
         class="desc"
         placeholder="请输入原因"
         name="title"
-        v-model="desc"
+        v-model="reason"
         v-if="status===1?true:false"
       />
       <!-- 提交按钮 -->
-      <el-button type="primary" @click="close()" class="submit fr">保存</el-button>
+      <el-button type="primary" @click="submit()" class="submit fr">保存</el-button>
     </div>
   </div>
 </template>
 <script>
-import { details } from "../../api/article";
+import { details, articleStatus } from "../../api/article";
 import Editor from "wangeditor";
 export default {
   data() {
@@ -38,19 +38,19 @@ export default {
       editor: "",
       title: "",
       status: -1,
-      desc: "",
+      reason: "",
       options: [
         {
           value: -1,
           label: "审核中",
         },
         {
-          value: 1,
-          label: "审核不通过",
-        },
-        {
           value: 0,
           label: "审核通过",
+        },
+        {
+          value: 1,
+          label: "审核不通过",
         },
       ],
     };
@@ -63,11 +63,12 @@ export default {
     //获取详情信息
     getData() {
       var detailsID = this.$route.params.id;
-      sessionStorage.setItem("id", detailsID);
       details({ id: detailsID }).then((res) => {
         if (res.status === 200) {
           res.data.forEach((item) => {
             this.title = item.title;
+            this.reason = item.reason;
+            this.status = item.status;
             this.editor.txt.html(item.content);
           });
         }
@@ -114,7 +115,16 @@ export default {
       // 初始 <p style='color:#cccccc'>请输入内容……</p>
       this.editor.txt.html();
     },
-    close() {},
+    submit() {
+      var detailsID = Number(this.$route.params.id),
+        data = {};
+      data.id = detailsID;
+      data.status = this.status;
+      data.reason = this.reason;
+      articleStatus(data).then((res) => {
+        this.$router.push("/article");
+      });
+    },
   },
   mounted() {
     this.createEditor();

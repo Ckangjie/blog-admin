@@ -6,6 +6,7 @@
       element-loading-text="Loading"
       border
       highlight-current-row
+      height="760"
     >
       <el-table-column type="selection" width="55"></el-table-column>
       <el-table-column label="发表用户" width="300px" align="center">
@@ -33,6 +34,15 @@
         </template>
       </el-table-column>
     </el-table>
+    <el-pagination
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+      :current-page="currentPage"
+      :page-sizes="[10,15,20]"
+      :page-size="pageSize"
+      layout="total, sizes, prev, pager, next, jumper"
+      :total="total"
+    ></el-pagination>
   </div>
 </template>
 
@@ -52,6 +62,11 @@ export default {
   },
   data() {
     return {
+      sumTotal: 0,
+      currentPage: Number(sessionStorage.getItem("currentPage"))
+        ? Number(sessionStorage.getItem("currentPage"))
+        : 1,
+      pageSize: 15,
       searchKey: "",
       list: null,
       listLoading: true,
@@ -63,8 +78,13 @@ export default {
   methods: {
     // 列表
     fetchData() {
+      let data = {
+        pageSize: this.pageSize,
+        currentPage: (this.currentPage - 1) * this.pageSize,
+      };
       this.listLoading = true;
-      commentList().then((response) => {
+      commentList(data).then((response) => {
+        this.sumTotal = response.total;
         this.list = response.data;
         this.listLoading = false;
       });
@@ -107,6 +127,21 @@ export default {
           this.list = res.data;
         }
       });
+    },
+    handleSizeChange(val) {
+      this.pageSize = val;
+      this.fetchData();
+    },
+    handleCurrentChange(val) {
+      this.currentPage = val;
+      sessionStorage.setItem("currentPage", val);
+      this.fetchData();
+    },
+  },
+  computed: {
+    // 文章总数
+    total: function () {
+      return this.sumTotal;
     },
   },
 };
