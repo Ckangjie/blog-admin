@@ -83,8 +83,8 @@ export default {
       list: [],
       sumTotal: 0,
       listLoading: true,
-      currentPage: Number(sessionStorage.getItem("currentPage"))
-        ? Number(sessionStorage.getItem("currentPage"))
+      currentPage: Number(sessionStorage.getItem("currentPageAdmin"))
+        ? Number(sessionStorage.getItem("currentPageAdmin"))
         : 1,
       pageSize: 10,
     };
@@ -176,7 +176,7 @@ export default {
     },
     handleCurrentChange(val) {
       this.currentPage = val;
-      sessionStorage.setItem("currentPage", val);
+      sessionStorage.setItem("currentPageAdmin", val);
       this.fetchData();
     },
   },
