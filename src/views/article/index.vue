@@ -1,12 +1,25 @@
 <template>
   <div class="app-container">
+    <el-row class="toolbar">
+      <el-col>
+        <el-input
+          v-model="searchKey"
+          placeholder="关键字"
+          class="searchKey"
+          @input="search(searchKey)"
+        />
+        <el-button type="primary" icon="el-icon-search">搜索</el-button>
+        <el-button type="danger" @click="handleDelete()">删除文章</el-button>
+      </el-col>
+    </el-row>
     <el-table
       v-loading="listLoading"
       :data="list"
       element-loading-text="Loading"
       border
       highlight-current-row
-      height="760"
+      @selection-change="handleSelectionChange"
+      height="720"
     >
       <el-table-column type="selection" width="55"></el-table-column>
       <el-table-column label="标题" width="300px">
@@ -36,17 +49,17 @@
           <span>{{ scope.row.time.slice(0,10) }}</span>
         </template>
       </el-table-column>
-      <el-table-column>
+      <el-table-column align="center" prop="time" label="操作">
         <template slot="header" slot-scope>
-          <el-input
+          <!-- <el-input
             v-model="searchKey"
-            placeholder="输入关键字搜索"
+            placeholder="关键字"
             class="searchKey"
             @input="search(searchKey)"
-          />
+          />-->
         </template>
         <template slot-scope="scope">
-          <el-button size="mini" type="danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+          <el-button size="mini" type="danger" @click="handleDelete(scope.row)">删除</el-button>
           <el-button size="mini" @click="handleEdit(scope.$index, scope.row)">查看</el-button>
         </template>
       </el-table-column>
@@ -79,6 +92,8 @@ export default {
   },
   data() {
     return {
+      ids: [],
+      multipleSelection: [],
       searchKey: "",
       list: [],
       sumTotal: 0,
@@ -86,7 +101,7 @@ export default {
       currentPage: Number(sessionStorage.getItem("currentPageAdmin"))
         ? Number(sessionStorage.getItem("currentPageAdmin"))
         : 1,
-      pageSize: 10,
+      pageSize: 13,
     };
   },
   computed: {
@@ -110,6 +125,12 @@ export default {
     this.fetchData();
   },
   methods: {
+    handleSelectionChange(data) {
+      data.forEach((item, index) => {
+        this.ids.push(item.id);
+      });
+      this.multipleSelection = data;
+    },
     // 获取文章总数
     getTotal() {
       getTotal().then((res) => {
@@ -136,14 +157,20 @@ export default {
       this.$router.push({ path: "/details/" + id });
     },
     // 删除
-    handleDelete(index, item) {
-      this.$confirm("此操作将永久删除该文章, 是否继续?", "提示", {
+    handleDelete(item) {
+      let data = [];
+      if (item === undefined) {
+        data = this.ids;
+      } else {
+        data.push(item.id);
+      }
+      this.$confirm("永久删除" + data.length + "篇文章, 是否继续?", "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
         type: "warning",
       })
         .then(() => {
-          Delete({ id: item.id }).then((res) => {
+          Delete({ ids: data }).then((res) => {
             if (res.status === 200) {
               this.$message({
                 type: "success",
@@ -164,7 +191,11 @@ export default {
     },
     // 搜索
     search(value) {
-      search({ value }).then((res) => {
+      let data = {
+        value,
+        client: "admin",
+      };
+      search(data).then((res) => {
         if (res.status === 200) {
           this.list = res.data;
         }
@@ -182,3 +213,12 @@ export default {
   },
 };
 </script>
+<style scoped lang="scss">
+.toolbar {
+  margin-bottom: 5px;
+  .searchKey.el-input {
+    width: 15%;
+    margin-right: 10px;
+  }
+}
+</style>

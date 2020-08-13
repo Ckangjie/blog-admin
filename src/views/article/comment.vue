@@ -1,12 +1,25 @@
 <template>
   <div class="app-container">
+    <el-row class="toolbar">
+      <el-col>
+        <el-input
+          v-model="searchKey"
+          placeholder="关键字"
+          class="searchKey"
+          @input="search(searchKey)"
+        />
+        <el-button type="primary" icon="el-icon-search">搜索</el-button>
+        <el-button type="danger" @click="handleDelete()">删除评论</el-button>
+      </el-col>
+    </el-row>
     <el-table
       v-loading="listLoading"
       :data="list"
       element-loading-text="Loading"
       border
       highlight-current-row
-      height="760"
+      @selection-change="handleSelectionChange"
+      height="720"
     >
       <el-table-column type="selection" width="55"></el-table-column>
       <el-table-column label="发表用户" width="300px" align="center">
@@ -30,7 +43,7 @@
       <el-table-column align="center" label="操作">
         <template slot-scope="scope">
           <!-- <el-button size="mini" @click="handleEdit(scope.$index, scope.row)">编辑</el-button> -->
-          <el-button size="mini" type="danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+          <el-button size="mini" type="danger" @click="handleDelete(scope.row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -62,11 +75,13 @@ export default {
   },
   data() {
     return {
+      multipleSelection: [],
+      ids: [],
       sumTotal: 0,
       currentPage: Number(sessionStorage.getItem("currentPage"))
         ? Number(sessionStorage.getItem("currentPage"))
         : 1,
-      pageSize: 15,
+      pageSize: 13,
       searchKey: "",
       list: null,
       listLoading: true,
@@ -76,6 +91,12 @@ export default {
     this.fetchData();
   },
   methods: {
+    handleSelectionChange(data) {
+      data.forEach((item, index) => {
+        this.ids.push(item.id);
+      });
+      this.multipleSelection = data;
+    },
     // 列表
     fetchData() {
       let data = {
@@ -94,14 +115,20 @@ export default {
       console.log(index, item);
     },
     // 删除
-    handleDelete(index, item) {
-      this.$confirm("此操作将永久删除该评论, 是否继续?", "提示", {
+    handleDelete(item) {
+      let data = [];
+      if (item === undefined) {
+        data = this.ids;
+      } else {
+        data.push(item.id);
+      }
+      this.$confirm("永久删除" + data.length + "条评论, 是否继续?", "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
         type: "warning",
       })
         .then(() => {
-          deleteComment({ id: item.id }).then((res) => {
+          deleteComment({ ids: data }).then((res) => {
             if (res.status === 200) {
               this.$message({
                 type: "success",
@@ -146,3 +173,12 @@ export default {
   },
 };
 </script>
+<style scoped lang="scss">
+.toolbar {
+  margin-bottom: 5px;
+  .searchKey.el-input {
+    width: 15%;
+    margin-right: 10px;
+  }
+}
+</style>
