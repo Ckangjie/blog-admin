@@ -25,12 +25,12 @@
       <el-table-column label="标题" width="300px">
         <template slot-scope="scope">{{ scope.row.title }}</template>
       </el-table-column>
-      <el-table-column align="center" label="内容" width="600px">
+      <el-table-column align="center" label="内容" width="400px">
         <template slot-scope="scope">{{ scope.row.content }}</template>
       </el-table-column>
       <el-table-column label="Author" align="center" width="100px">
         <template slot-scope="scope">
-          <span>{{ scope.row.author }}</span>
+          <span>{{ scope.row.username }}</span>
         </template>
       </el-table-column>
       <el-table-column label="阅读量" align="center" width="70px">
@@ -126,6 +126,7 @@ export default {
   },
   methods: {
     handleSelectionChange(data) {
+      this.ids = [];
       data.forEach((item, index) => {
         this.ids.push(item.id);
       });

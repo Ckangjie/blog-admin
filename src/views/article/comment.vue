@@ -23,7 +23,7 @@
     >
       <el-table-column type="selection" width="55"></el-table-column>
       <el-table-column label="发表用户" width="300px" align="center">
-        <template slot-scope="scope">{{ scope.row.name }}</template>
+        <template slot-scope="scope">{{ scope.row.username }}</template>
       </el-table-column>
       <el-table-column align="center" label="内容" width="700px">
         <template slot-scope="scope">{{ scope.row.content }}</template>
@@ -92,6 +92,7 @@ export default {
   },
   methods: {
     handleSelectionChange(data) {
+      this.ids = [];
       data.forEach((item, index) => {
         this.ids.push(item.id);
       });
