@@ -68,7 +68,7 @@
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange"
       :current-page="currentPage"
-      :page-sizes="[10,15,20]"
+      :page-sizes="[13,15,20]"
       :page-size="pageSize"
       layout="total, sizes, prev, pager, next, jumper"
       :total="total"
@@ -147,7 +147,7 @@ export default {
       };
       this.listLoading = true;
       getList(data).then((response) => {
-        this.sumTotal = response.total;
+        this.sumTotal = response.total.length;
         this.list = response.data;
         this.listLoading = false;
       });
