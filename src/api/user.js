@@ -8,11 +8,11 @@ export function login(params) {
   })
 }
 
-export function getInfo(token) {
+export function getInfo(params) {
   return request({
-    url: '/vue-admin-template/user/info',
-    method: 'get',
-    params: { token }
+    url: '/userInfo',
+    method: 'post',
+    params
   })
 }
 

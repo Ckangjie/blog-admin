@@ -47,6 +47,14 @@ export function details(params) {
     params
   })
 }
+// 新增文章
+export function saveArticle(params) {
+  return request({
+    url: '/addArticle',
+    method: 'post',
+    params
+  })
+}
 // 文章状态
 export function articleStatus(params) {
   return request({

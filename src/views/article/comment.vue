@@ -8,8 +8,13 @@
           class="searchKey"
           @input="search(searchKey)"
         />
-        <el-button type="primary" icon="el-icon-search">搜索</el-button>
-        <el-button type="danger" @click="handleDelete()">删除评论</el-button>
+        <el-button type="primary" icon="el-icon-search" circle></el-button>
+        <el-button
+          type="danger"
+          icon="el-icon-delete"
+          circle
+          @click="handleDelete()"
+        ></el-button>
       </el-col>
     </el-row>
     <el-table
@@ -37,13 +42,19 @@
       <el-table-column align="center" prop="time" label="发表日期">
         <template slot-scope="scope">
           <!-- <i class="el-icon-time" /> -->
-          <span>{{ scope.row.time.slice(0,10) }}</span>
+          <span>{{ scope.row.time.slice(0, 10) }}</span>
         </template>
       </el-table-column>
       <el-table-column align="center" label="操作">
         <template slot-scope="scope">
           <!-- <el-button size="mini" @click="handleEdit(scope.$index, scope.row)">编辑</el-button> -->
-          <el-button size="mini" type="danger" @click="handleDelete(scope.row)">删除</el-button>
+          <el-button
+            size="mini"
+            type="danger"
+            icon="el-icon-delete"
+            circle
+            @click="handleDelete(scope.row)"
+          ></el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -51,7 +62,7 @@
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange"
       :current-page="currentPage"
-      :page-sizes="[10,15,20]"
+      :page-sizes="[10, 15, 20]"
       :page-size="pageSize"
       layout="total, sizes, prev, pager, next, jumper"
       :total="total"
@@ -117,36 +128,35 @@ export default {
     },
     // 删除
     handleDelete(item) {
-      let data = [];
-      if (item === undefined) {
-        data = this.ids;
-      } else {
-        data.push(item.id);
-      }
-      this.$confirm("永久删除" + data.length + "条评论, 是否继续?", "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
-      })
-        .then(() => {
-          deleteComment({ ids: data }).then((res) => {
-            if (res.status === 200) {
-              this.$message({
-                type: "success",
-                message: res.message,
-                center: true,
-              });
-              this.fetchData();
-            }
-          });
+      let data = item ? [item.id] : this.ids;
+      if (data.length > 0) {
+        this.$confirm("永久删除" + data.length + "条评论, 是否继续?", "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning",
         })
-        .catch(() => {
-          this.$message({
-            type: "info",
-            message: "已取消删除",
-            center: true,
+          .then(() => {
+            deleteComment({ ids: data }).then((res) => {
+              if (res.status === 200) {
+                this.$message({
+                  type: "success",
+                  message: res.message,
+                  center: true,
+                });
+                this.fetchData();
+              }
+            });
+          })
+          .catch(() => {
+            this.$message({
+              type: "info",
+              message: "已取消删除",
+              center: true,
+            });
           });
-        });
+      } else {
+        this.$message("请选择要删除的评论!");
+      }
     },
     // 搜索
     search(value) {

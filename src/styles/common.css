@@ -44,3 +44,6 @@
   -webkit-box-orient: vertical;
   word-break: break-all;  /*强制英文单词自动换行*/
 }
+body{
+	-webkit-tap-highlight-color:transparent;
+}
