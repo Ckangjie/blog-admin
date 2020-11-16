@@ -3,11 +3,22 @@
     <!-- 添加富文本编辑器 wangeditor -->
     <div class="clearfix">
       <!-- 标题 -->
-      <el-input type="text" class="title" placeholder="请输入标题" name="title" v-model="title" />
+      <el-input
+        type="text"
+        class="title"
+        placeholder="请输入标题"
+        name="title"
+        v-model="title"
+      />
       <!-- 富文本编辑框 -->
       <div id="editor" class="editor"></div>
       <!-- 标签技能 -->
-      <el-select v-model="status" placeholder="请选择" class="skill" @change="change">
+      <el-select
+        v-model="status"
+        placeholder="请选择"
+        class="skill"
+        @change="change"
+      >
         <el-option
           v-for="item in options"
           :key="item.value"
@@ -21,10 +32,12 @@
         placeholder="请输入原因"
         name="title"
         v-model="reason"
-        v-if="status===1?true:false"
+        v-if="status === 1 ? true : false"
       />
       <!-- 提交按钮 -->
-      <el-button type="primary" @click="submit()" class="submit fr">保存</el-button>
+      <el-button type="primary" @click="submit()" class="submit fr"
+        >保存</el-button
+      >
     </div>
   </div>
 </template>
@@ -39,6 +52,7 @@ export default {
       title: "",
       status: -1,
       reason: "",
+      skill: "",
       options: [
         {
           value: -1,
@@ -116,11 +130,15 @@ export default {
       this.editor.txt.html();
     },
     submit() {
-      var detailsID = Number(this.$route.params.id),
+      let content = this.editor.txt.html(),
+        detailsID = Number(this.$route.params.id),
         data = {};
       data.id = detailsID;
       data.status = this.status;
       data.reason = this.reason;
+      data.title = this.title;
+      data.content = content;
+      data.skill = this.skill;
       articleStatus(data).then((res) => {
         this.$router.push("/article");
       });

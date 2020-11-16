@@ -34,6 +34,7 @@
 </template>
 <script>
 import { saveArticle } from "../api/article";
+import { getToken } from "../utils/auth";
 import Editor from "wangeditor";
 export default {
   data() {
@@ -43,6 +44,10 @@ export default {
       editor: "",
       skill: "",
       title: "",
+      api:
+        process.env.NODE_ENV === "production"
+          ? "http://it.ckjblog.com:3306/"
+          : "http://localhost:9528/dev-api/",
       status: -1,
       reason: "",
       options: [
@@ -83,12 +88,34 @@ export default {
     },
     // 创建编辑器
     createEditor() {
+      var _this = this;
       //实例化一个编辑器
       this.editor = new Editor("#editor");
+      this.editor.customConfig.debug = true; // 开启debug模式
+      this.editor.customConfig.uploadImgTimeout = 50000; //时间
       // 图片上传格式
-      this.editor.customConfig.uploadImgShowBase64 = true;
+      // this.editor.customConfig.uploadImgShowBase64 = true;
       // 显示网络图片上传选项
-      this.editor.customConfig.showLinkImg = true;
+      this.editor.customConfig.showLinkImg = false;
+      // 图片上传服务器
+      this.editor.customConfig.uploadImgServer =
+        process.env.NODE_ENV === "production"
+          ? "http://it.ckjblog.com:3306/uploadAvatar"
+          : "/dev-api/uploadAvatar";
+      // 上传属性
+      this.editor.customConfig.uploadFileName = "file";
+      // 设置请求头
+      this.editor.customConfig.uploadImgHeaders = {};
+      // 监听图片上传
+      this.editor.customConfig.uploadImgHooks = {
+        success: function (xhr, editor, result) {
+          // 图片上传并返回结果，图片插入成功之后触发
+        },
+        customInsert: function (insertImg, result, editor) {
+          var url = _this.api + result.data.url;
+          insertImg(url);
+        },
+      };
       // 关闭样式过滤(貌似不生效)
       this.editor.customConfig.pasteFilterStyle = false;
       // 多语言
@@ -131,14 +158,18 @@ export default {
         data.content = content;
         data.skill = this.skill;
         data.author = "adminmaster";
-        saveArticle(data).then((res) => {
-          if (res.status === 200) {
+        saveArticle(data)
+          .then((res) => {
+            if (res.status === 200) {
+              this.disabled = false;
+              setTimeout(() => {
+                this.$router.push("/article");
+              }, 2000);
+            }
+          })
+          .catch((err) => {
             this.disabled = false;
-            setTimeout(() => {
-              this.$router.push("/article");
-            }, 2000);
-          }
-        });
+          });
       } else {
         this.$message("请填写或选择相关内容!");
       }
