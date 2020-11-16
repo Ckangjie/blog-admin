@@ -139,6 +139,7 @@ export default {
       data.title = this.title;
       data.content = content;
       data.skill = this.skill;
+      console.log(5);
       articleStatus(data).then((res) => {
         this.$router.push("/article");
       });
