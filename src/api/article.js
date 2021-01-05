@@ -4,7 +4,9 @@ export function getList(params) {
   return request({
     url: '/article',
     method: 'post',
-    params
+    data: {
+      ...params
+    }
   })
 }
 // 删除
@@ -57,10 +59,30 @@ export function saveArticle(params) {
   })
 }
 // 文章状态
-export function articleStatus(params) {
+export function articleEdit(params) {
   return request({
     url: '/articleStatus',
     method: 'post',
     params
+  })
+}
+// 添加文章分类
+export function addCategory(params) {
+  return request({
+    url: '/addCategory',
+    method: 'post',
+    data: {
+      ...params
+    }
+  })
+}
+// 获取文章分类
+export function getCategoryList(params) {
+  return request({
+    url: '/getCategoryList',
+    method: 'POST',
+    data: {
+      ...params
+    }
   })
 }

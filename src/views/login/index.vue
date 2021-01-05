@@ -9,7 +9,7 @@
       label-position="left"
     >
       <div class="title-container">
-        <h3 class="title">管理系统</h3>
+        <h3 class="title">后台管理系统</h3>
       </div>
       <el-form-item prop="username">
         <el-input
@@ -17,7 +17,7 @@
           autocomplete="off"
           placeholder="用户名"
         ></el-input>
-        <svg-icon iconClass="user" />
+        <svg-icon iconClass="username" />
       </el-form-item>
       <el-form-item prop="password">
         <el-input
@@ -26,10 +26,10 @@
           autocomplete="off"
           placeholder="密码"
         ></el-input>
-        <svg-icon iconClass="password" />
+        <svg-icon iconClass="password-1" />
       </el-form-item>
       <div class="clearfix">
-        <el-col :sm="16">
+        <el-col :sm="16" :xs="16" class="code-box">
           <el-form-item prop="code">
             <el-input
               v-model="loginForm.code"
@@ -37,10 +37,10 @@
               placeholder="验证码"
             >
             </el-input>
-            <svg-icon iconClass="password" />
+            <svg-icon iconClass="password-1" />
           </el-form-item>
         </el-col>
-        <el-col :sm="8">
+        <el-col :sm="8" :xs="8">
           <div class="code" @click="changeCode">{{ code }}</div>
         </el-col>
       </div>
@@ -75,7 +75,6 @@ export default {
         password: [{ required: true, trigger: "blur", validator: testPwd }],
         code: [{ required: true, trigger: "blur", message: "请输入验证码" }],
       },
-      loading: false,
       passwordType: "password",
       redirect: undefined,
     };
@@ -140,8 +139,15 @@ export default {
       }
       this.code = code.toLowerCase(); //把code值赋给验证码
     },
+    keyDown(e) {
+      //如果是回车则执行登录方法
+      if (e.keyCode == 13) {
+        this.handleLogin();
+      }
+    },
   },
   mounted() {
+    window.addEventListener("keydown", this.keyDown);
     this.changeCode();
   },
 };
@@ -196,6 +202,7 @@ $light_gray: #eee;
       font-family: LilyUPC;
       letter-spacing: 5px;
       cursor: pointer;
+      user-select: none;
     }
     svg {
       position: absolute;
@@ -229,7 +236,6 @@ $light_gray: #eee;
       font-weight: bold;
     }
   }
-
   .show-pwd {
     position: absolute;
     right: 10px;
@@ -238,6 +244,9 @@ $light_gray: #eee;
     color: $dark_gray;
     cursor: pointer;
     user-select: none;
+  }
+  .code-box.el-col {
+    padding: 0 !important;
   }
 }
 </style>

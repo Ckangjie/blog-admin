@@ -1,196 +1,364 @@
 <template>
   <div class="app-container">
-    <!-- 添加富文本编辑器 wangeditor -->
-    <div class="clearfix">
-      <!-- 标题 -->
-      <el-input
-        type="text"
-        class="title"
-        placeholder="请输入标题"
-        name="title"
-        v-model="title"
-      />
-      <!-- 富文本编辑框 -->
-      <div id="editor" class="editor"></div>
-      <!-- 标签技能 -->
-      <el-select v-model="skill" placeholder="请选择" class="skill">
-        <el-option
-          v-for="item in options"
-          :key="item.value"
-          :label="item.value"
-          :value="item.value"
-        ></el-option>
-      </el-select>
-      <!-- 提交按钮 -->
-      <el-button
-        type="primary"
-        @click="submit()"
-        class="submit fr"
-        :disabled="disabled"
-        >保存</el-button
-      >
-    </div>
+    <el-row class="toolBar" :gutter="20">
+      <el-col :md="22" class="title">
+        <el-input placeholder="请输入标题" v-model="title"></el-input
+      ></el-col>
+      <el-col :md="2"
+        ><el-button class="submit" @click="submitData">发布</el-button>
+      </el-col>
+    </el-row>
+    <v-md-editor
+      v-model="text"
+      height="600px"
+      mode="editable"
+      :placeholder="placeholder"
+      @save="save"
+      :disabled-menus="[]"
+      :value="markdown"
+      @upload-image="handleUploadImage"
+      left-toolbar="undo redo clear | h bold italic strikethrough quote | ul ol table hr | image code | tip | emoji | save"
+      :include-level="[3, 4]"
+    ></v-md-editor>
+    <el-dialog
+      title="发布文章"
+      :visible.sync="dialogVisible"
+      width="30%"
+      :before-close="handleCloseDialog"
+      class="dialog-box"
+    >
+      <div class="article-class-box">
+        <span>文章分类:</span>
+        <div class="article-class-list">
+          <div>
+            <el-tag
+              :disable-transitions="false"
+              closable
+              @close="handleClose('class', 'class')"
+            >
+              {{ checkedCities.length === 0 ? "选择分类" : category[0] }}
+            </el-tag>
+            <el-input
+              class="input-new-tag"
+              v-if="inputClassVisible"
+              v-model="inputClassValue"
+              ref="saveClassInput"
+              size="small"
+              @keyup.enter.native="handleClassInputConfirm"
+              @blur="handleClassInputConfirm"
+            >
+            </el-input>
+            <el-button
+              v-else
+              class="button-new-tag"
+              size="small"
+              @click="showClassInput()"
+              >+ New Tag</el-button
+            >
+          </div>
+          <div class="class-item">
+            <template>
+              <el-radio-group
+                v-model="radio"
+                @change="handleCheckedCitiesChange"
+              >
+                <el-radio v-for="city in listClass" :label="city" :key="city">{{
+                  city
+                }}</el-radio>
+              </el-radio-group>
+            </template>
+          </div>
+        </div>
+      </div>
+      <div class="skilltags-box">
+        <span>文章标签:</span>
+        <div class="skilltag-list">
+          <div>
+            <el-tag v-if="SelectTags.length === 0">选择标签</el-tag>
+            <el-tag
+              :key="tag"
+              v-for="tag in SelectTags"
+              closable
+              :disable-transitions="false"
+              @close="handleClose(tag, 'tag')"
+            >
+              {{ tag }}
+            </el-tag>
+            <el-input
+              class="input-new-tag"
+              v-if="inputVisible"
+              v-model="inputValue"
+              ref="saveTagInput"
+              size="small"
+              @keyup.enter.native="handleInputConfirm"
+              @blur="handleInputConfirm"
+            >
+            </el-input>
+            <el-button
+              v-else
+              class="button-new-tag"
+              size="small"
+              @click="showInput"
+              >+ New Tag</el-button
+            >
+            <div class="skilltag-item">
+              <template>
+                <el-checkbox-group
+                  v-model="checkedTag"
+                  @change="handleCheckedTagChange"
+                >
+                  <el-checkbox v-for="city in tags" :label="city" :key="city">{{
+                    city
+                  }}</el-checkbox>
+                </el-checkbox-group>
+              </template>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="submit">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
+
 <script>
-import { saveArticle } from "../api/article";
-import { getToken } from "../utils/auth";
-import Editor from "wangeditor";
+import {
+  handleUploadFile,
+  saveArticle,
+  details,
+  articleEdit,
+  getCategoryList,
+} from "@/api/article";
+
+import axios from "axios";
 export default {
   data() {
     return {
-      details: [],
-      disabled: false,
-      editor: "",
-      skill: "",
+      markdown: "### 标题",
+      dialogVisible: false,
       title: "",
-      api:
-        process.env.NODE_ENV === "production"
-          ? "http://it.ckjblog.com:3306/"
-          : "http://localhost:9528/dev-api/",
-      status: -1,
-      reason: "",
-      options: [
-        {
-          value: "java",
-        },
-        {
-          value: "JavaScript",
-        },
-        {
-          value: "node.js",
-        },
-        {
-          value: "react.js",
-        },
-        {
-          value: "css",
-        },
-        {
-          value: "Angular.js",
-        },
-        {
-          value: "php",
-        },
-        {
-          value: "vue.js",
-        },
-        {
-          value: "html",
-        },
-      ],
+      text: "",
+      htmlText: "",
+      placeholder: "请输入内容",
+      dynamicTags: [],
+      inputVisible: false,
+      inputValue: "",
+      inputClassVisible: false,
+      inputClassValue: "",
+      radio: null,
+      tags: [],
+      SelectTags: [],
+      listClass: [],
+      checkedCities: [],
+      checkedTag: [],
     };
   },
-  methods: {
-    // 下拉变化事件
-    change() {
-      console.log(this.status);
+  computed: {
+    category: function () {
+      return this.checkedCities;
     },
-    // 创建编辑器
-    createEditor() {
-      var _this = this;
-      //实例化一个编辑器
-      this.editor = new Editor("#editor");
-      this.editor.customConfig.debug = true; // 开启debug模式
-      this.editor.customConfig.uploadImgTimeout = 50000; //时间
-      // 图片上传格式
-      // this.editor.customConfig.uploadImgShowBase64 = true;
-      // 显示网络图片上传选项
-      this.editor.customConfig.showLinkImg = false;
-      // 图片上传服务器
-      this.editor.customConfig.uploadImgServer =
-        process.env.NODE_ENV === "production"
-          ? "http://it.ckjblog.com:3306/uploadAvatar"
-          : "/dev-api/uploadAvatar";
-      // 上传属性
-      this.editor.customConfig.uploadFileName = "file";
-      // 设置请求头
-      this.editor.customConfig.uploadImgHeaders = {};
-      // 监听图片上传
-      this.editor.customConfig.uploadImgHooks = {
-        success: function (xhr, editor, result) {
-          // 图片上传并返回结果，图片插入成功之后触发
-        },
-        customInsert: function (insertImg, result, editor) {
-          var url = _this.api + result.data.url;
-          insertImg(url);
-        },
-      };
-      // 关闭样式过滤(貌似不生效)
-      this.editor.customConfig.pasteFilterStyle = false;
-      // 多语言
-      // this.editor.customConfig.lang = {'设置标题': 'title','正文': 'p', '链接文字': 'link text','链接': 'link','上传图片': 'upload image','上传': 'upload','创建': 'init'}
-      // 开发语言配置
-      // this.editor.config.codeDefaultLang = 'javascript'
-      // 自定义颜色
-      this.editor.customConfig.colors = [
-        "#000000",
-        "#eeece0",
-        "#1c487f",
-        "#4d80bf",
-        "#c24f4a",
-        "#8baa4a",
-        "#7b5ba1",
-        "#46acc8",
-        "#f9963b",
-        "#ffffff",
-      ];
-      // 配置字体
-      this.editor.customConfig.fontNames = [
-        "宋体",
-        "微软雅黑",
-        "Arial",
-        "Tahoma",
-        "Verdana",
-      ];
-      //创建
-      this.editor.create();
-      // 富文本内容
-      // 初始 <p style='color:#cccccc'>请输入内容……</p>
-      this.editor.txt.html();
+  },
+  methods: {
+    handleCloseDialog() {
+      this.dialogVisible = false;
+    },
+    // 标签选框
+    handleCheckedTagChange(value) {
+      let checkedCount = value.length;
+      checkedCount > 0 && checkedCount < this.tags.length;
+      this.SelectTags = value;
+    },
+    // 文章选框
+    handleCheckedCitiesChange(value) {
+      this.checkedCities.splice(0, 1);
+      this.checkedCities.push(value);
+    },
+    // 关闭标签
+    handleClose(tag, value) {
+      value === "tag"
+        ? this.SelectTags.splice(this.SelectTags.indexOf(tag), 1)
+        : this.checkedCities.splice(0, 1);
+    },
+    // 显示input框
+    showInput() {
+      this.inputVisible = true;
+      this.$nextTick((_) => {
+        this.$refs.saveTagInput.$refs.input.focus();
+      });
+    },
+    // 显示input框
+    showClassInput() {
+      this.inputClassVisible = true;
+      this.$nextTick((_) => {
+        this.$refs.saveClassInput.$refs.input.focus();
+      });
+    },
+    // input 失焦事件
+    handleInputConfirm() {
+      let inputValue = this.inputValue;
+      if (inputValue) {
+        this.SelectTags.push(inputValue);
+      }
+      this.inputVisible = false;
+      this.inputValue = "";
+    },
+    // input 失焦事件
+    handleClassInputConfirm() {
+      this.checkedCities.splice(0, 1);
+      let inputValue = this.inputClassValue;
+      if (inputValue) {
+        this.checkedCities.push(inputValue);
+      }
+      this.inputClassVisible = false;
+      this.inputClassValue = "";
     },
     submit() {
-      let content = this.editor.txt.html(),
-        data = {};
-      if (this.title && content && this.skill) {
-        this.disabled = true;
-        data.title = this.title;
-        data.content = content;
-        data.skill = this.skill;
-        data.author = "adminmaster";
-        saveArticle(data)
-          .then((res) => {
-            if (res.status === 200) {
-              this.disabled = false;
-              setTimeout(() => {
-                this.$router.push("/article");
-              }, 2000);
-            }
-          })
-          .catch((err) => {
-            this.disabled = false;
-          });
+      const submitObj = {};
+      submitObj.title = this.title;
+      submitObj.content = this.text;
+      submitObj.htmlCon = this.htmlText;
+      submitObj.category = this.category[0];
+      submitObj.author = "adminmaster";
+      submitObj.tags = JSON.stringify(this.SelectTags);
+      submitObj.id = this.$route.params.id;
+      if (this.$route.params.id) {
+        articleEdit(submitObj).then((res) => {
+          this.$router.push({ path: "/article" });
+        });
       } else {
-        this.$message("请填写或选择相关内容!");
+        saveArticle(submitObj).then((res) => {
+          this.$router.push({ path: "/article" });
+        });
       }
+      this.dialogVisible = false;
+    },
+    // 发布文章前
+    submitData() {
+      if (!this.text) {
+        this.$message.warning("请编辑斌并保存文章");
+        return;
+      }
+      this.dialogVisible = true;
+      getCategoryList({ id: "all" }).then((res) => {
+        res.data.forEach((item) => {
+          item.parent_id === 0
+            ? this.listClass.push(item.name)
+            : this.tags.push(item.name);
+        });
+      });
+    },
+    save(text, html) {
+      if (!html) {
+        this.$message.warning("请编辑内容!");
+        return;
+      }
+      this.text = text;
+      this.htmlText = html;
+      this.$message.success("保存成功!");
+    },
+    handleUploadImage(event, insertImage, files) {
+      // 拿到 files 之后上传到文件服务器，然后向编辑框中插入对应的内容
+      const url =
+        process.env.NODE_ENV === "production"
+          ? "http://it.ckjblog.com:3306/uploadAvatar"
+          : "http://127.0.0.1:3001/uploadAvatar";
+      var formData = new FormData();
+      formData.append("file", files[0]);
+      axios({
+        url,
+        method: "post",
+        data: formData,
+      }).then((res) => {
+        // 插入到页面
+        insertImage({
+          url: url.substring(0, url.lastIndexOf("/") + 1) + res.data.data.url,
+          desc: res.data.data.name,
+          width: "100px",
+          height: "auto",
+        });
+      });
+    },
+    //获取详情信息
+    getData() {
+      var detailsID = this.$route.params.id;
+      details({ id: detailsID }).then((res) => {
+        if (res.status === 200) {
+          const item = res.data[0];
+          this.title = item.title;
+          // this.reason = item.reason;
+          // this.status = item.status;
+          this.category.push(item.category);
+          this.SelectTags = item.skill === null ? [] : JSON.parse(item.skill);
+          this.text = item.content;
+        }
+      });
     },
   },
   mounted() {
-    this.createEditor();
-    // this.getData();
+    var detailsID = this.$route.params.id;
+    if (detailsID) {
+      this.getData();
+    }
   },
 };
 </script>
 <style scoped>
-.editor {
+.dialog-box >>> .el-dialog__body {
+  padding: 20px !important;
+}
+.toolBar {
   margin-bottom: 5px;
 }
-.editor >>> .w-e-text-container {
-  height: 600px !important;
-  z-index: 1 !important;
+.submit {
+  width: 100%;
 }
-.app-container /deep/ .el-input.desc {
-  width: 20%;
+.el-tag + .el-tag {
   margin-left: 10px;
+}
+.button-new-tag {
+  margin-left: 10px;
+  height: 32px;
+  line-height: 30px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.input-new-tag {
+  width: 90px;
+  margin-left: 10px;
+  vertical-align: bottom;
+}
+.skilltags-box,
+.article-class-box {
+  line-height: 35px;
+}
+.article-class-box {
+  margin-top: 10px;
+}
+.skilltags-box span:first-child,
+.article-class-box span:first-child {
+  margin-right: 10px;
+}
+.article-class-list,
+.skilltag-list {
+  position: relative;
+  left: 80px;
+  top: -30px;
+  width: 80%;
+}
+.class-item,
+.skilltag-item {
+  padding: 10px;
+  border: 1px solid #ccc;
+  margin-top: 5px;
+  overflow-y: auto;
+  max-height: 100px;
+  border-radius: 3px;
+}
+.el-radio {
+  margin-top: 5px;
 }
 </style>

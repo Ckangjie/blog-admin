@@ -40,7 +40,7 @@ service.interceptors.response.use(
     if (res.status !== 200) {
       Message({
         message: res.message || 'Error',
-        type: 'error',
+        type: res.type || 'error',
         duration: 2 * 1000
       })
 
@@ -54,7 +54,7 @@ service.interceptors.response.use(
           }, 2000)
         })
       }
-      return Promise.reject(new Error(res.message || 'Error'))
+      // return Promise.reject(new Error(res.message || 'Error'))
     } else {
       // if (res.message) {
       //   Message({
