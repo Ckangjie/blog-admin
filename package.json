@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@kangc/v-md-editor": "^1.5.5",
-    "axios": "0.18.1",
+    "axios": "1.6.0",
     "core-js": "3.6.5",
     "element-ui": "2.13.2",
     "js-cookie": "2.2.0",
